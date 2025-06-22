@@ -1,6 +1,12 @@
 # test-repo-pc4
 # Proyecto 7: Observabilidad de clúster Kubernetes local (mini-monitoring)
 
+## Integrantes:
+
+- Christian Luna
+- Diego Osorio
+- Alex Vega
+
 ## Setup
 
 1. Construir la imagen Docker local:
