@@ -17,6 +17,6 @@ done
 echo "Todos los logs han sido guardados en logs/all_pods.log"
 
 echo "===================== Eventos del Cluster =====================" >> "logs/all_pods.log"
-kubectl get events -n "$namespace" | tee -a "logs/all_pods.log"
+kubectl get events -n "$namespace" | tee -a "logs/all_events.log"
 
-echo "Eventos del cluster guardados en logs/all_pods.log"
+echo "Eventos del cluster guardados en logs/all_events.log"
