@@ -1,4 +1,4 @@
-# Script que recolecta todos los logs de los Pods en un namespace específico
+# Script bash que recolecta todos los logs de los Pods en un namespace específico
 
 ## Namespace
 Según la documentación de [vmware](https://www.vmware.com/topics/kubernetes-namespace#:~:text=Los%20espacios%20de%20nombres%20son%20una%20forma%20de%20organizar%20cl%C3%BAsteres%20en%20subgrupos%20virtuales) un namespace **es la forma de organizar clústeres en subgrupos virtuales** así que en este contexto, en lo que debemos enfocarnos es en buscar todos los pods que se alojan en el namespace `default` ya que por defecto se agrupan ahí.
