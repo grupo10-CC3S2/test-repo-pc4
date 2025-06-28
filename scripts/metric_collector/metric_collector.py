@@ -31,7 +31,6 @@ class MetricCollector:
                         "CPU(cores)": parts[1],
                         "MEMORY(bytes)": parts[2]
                     })
-                    print(f"   {parts[0]}: CPU={parts[1]}, Memory={parts[2]}")
             
             return metrics
         except subprocess.CalledProcessError as e:
@@ -57,7 +56,6 @@ class MetricCollector:
                         "MEMORY(bytes)": parts[3],
                         "MEMORY(%)": parts[4]
                     })
-                    print(f"    {parts[0]}: CPU={parts[1]}({parts[2]}), Memory={parts[3]}({parts[4]})")
             
             return metrics
         except subprocess.CalledProcessError as e:
@@ -113,8 +111,8 @@ class MetricCollector:
 def main():
     namespace = sys.argv[1] if len(sys.argv) > 1 else "default"
     
-    print(" Iniciando recolección de métricas de Kubernetes")
-    print(f" Namespace: {namespace}")
+    print("Iniciando recolección de métricas de Kubernetes")
+    print(f"Namespace: {namespace}")
     print("-" * 50)
     
     collector = MetricCollector(namespace)
@@ -126,7 +124,7 @@ def main():
         collector.save_pod_metrics_json(pod_metrics)
         print(f" Recolección de métricas de {len(pod_metrics)} pods")
     
-    print("-" * 30)
+    print("-" * 50)
     
     # Recolectar métricas de nodos
     node_metrics = collector.collect_node_metrics()
