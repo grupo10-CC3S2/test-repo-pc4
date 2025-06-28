@@ -32,3 +32,6 @@ flux-getk:
 
 flux-watchk:
 	flux get kustomizations --watch
+
+pod-images:
+	kubectl get pods -n default -l pod=timeserver-pod -o jsonpath='{.items[*].spec.containers[*].image}'
