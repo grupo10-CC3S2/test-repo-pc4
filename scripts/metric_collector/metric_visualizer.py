@@ -130,5 +130,9 @@ def generate_html_graph_nodes(df, output_path, name):
     print(f"\nGráfico HTML guardado en: {name}")
 
 
-if __name__ == "__main__":
+def main():
     visualize_metrics_console()
+
+
+if __name__ == "__main__":
+    main()

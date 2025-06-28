@@ -107,7 +107,7 @@ def collect_metrics__nodes(nodes):
     print("=========================================================")
 
 
-if __name__ == "__main__":
+def main():
     nodes = get_nodes()
     if not nodes:
         print("No se encontraron nodos.")
@@ -122,3 +122,7 @@ if __name__ == "__main__":
             print("=========================================================")
             collect_metrics__pods(name)
             collect_metrics__nodes(nodes)
+
+
+if __name__ == "__main__":
+    main()
