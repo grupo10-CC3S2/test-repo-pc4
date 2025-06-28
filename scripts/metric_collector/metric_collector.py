@@ -1,142 +1,124 @@
 import os
-import subprocess
+from pathlib import Path
 import sys
+import subprocess
+import pandas as pd
+from tabulate import tabulate
+import plotly.express as px
 import json
-import csv
-from typing import List, Dict
 
-class MetricCollector:
-    def __init__(self, namespace: str = "default"):
-        self.namespace = namespace
-        self.metrics_dir = "metrics"
-        self._ensure_directories()
-    
-    def _ensure_directories(self):
-        os.makedirs(self.metrics_dir, exist_ok=True)
-    
-    def collect_pod_metrics(self) -> List[Dict]:
-        print(f"Recolectando métricas de pods en namespace: {self.namespace}")
-        try:
-            result = subprocess.run(
-                ["kubectl", "top", "pods", "-n", self.namespace, "--no-headers"],
-                capture_output=True, text=True, check=True
-            )
-            
-            metrics = []
-            for line in result.stdout.strip().splitlines():
-                parts = line.split()
-                if len(parts) >= 3:
-                    metrics.append({
-                        "NAME": parts[0],
-                        "CPU(cores)": parts[1],
-                        "MEMORY(bytes)": parts[2]
-                    })
-                    print(f"   {parts[0]}: CPU={parts[1]}, Memory={parts[2]}")
-            
-            return metrics
-        except subprocess.CalledProcessError as e:
-            print(f" Error al obtener métricas de pods: {e.stderr}")
-            return []
-    
-    def collect_node_metrics(self) -> List[Dict]:
-        print("Recolectando métricas de nodos")
-        try:
-            result = subprocess.run(
-                ["kubectl", "top", "nodes", "--no-headers"],
-                capture_output=True, text=True, check=True
-            )
-            
-            metrics = []
-            for line in result.stdout.strip().splitlines():
-                parts = line.split()
-                if len(parts) >= 5:
-                    metrics.append({
-                        "NAME": parts[0],
-                        "CPU(cores)": parts[1],
-                        "CPU(%)": parts[2],
-                        "MEMORY(bytes)": parts[3],
-                        "MEMORY(%)": parts[4]
-                    })
-                    print(f"    {parts[0]}: CPU={parts[1]}({parts[2]}), Memory={parts[3]}({parts[4]})")
-            
-            return metrics
-        except subprocess.CalledProcessError as e:
-            print(f" Error al obtener métricas de nodos: {e.stderr}")
-            return []
-    
-    def save_pod_metrics_csv(self, metrics: List[Dict]):
-        if not metrics:
-            print("  No hay métricas de pods para guardar")
-            return
-            
-        filepath = f"{self.metrics_dir}/pod_metrics.csv"
-        with open(filepath, "w", newline="", encoding="utf-8") as f:
-            fieldnames = ["NAME", "CPU(cores)", "MEMORY(bytes)"]
-            writer = csv.DictWriter(f, fieldnames=fieldnames)
-            writer.writeheader()
-            writer.writerows(metrics)
-        print(f" Métricas de pods CSV guardadas en {filepath}")
-    
-    def save_node_metrics_csv(self, metrics: List[Dict]):
-        if not metrics:
-            print("  No hay métricas de nodos para guardar")
-            return
-            
-        filepath = f"{self.metrics_dir}/node_metrics.csv"
-        with open(filepath, "w", newline="", encoding="utf-8") as f:
-            fieldnames = ["NAME", "CPU(cores)", "CPU(%)", "MEMORY(bytes)", "MEMORY(%)"]
-            writer = csv.DictWriter(f, fieldnames=fieldnames)
-            writer.writeheader()
-            writer.writerows(metrics)
-        print(f" Métricas de nodos CSV guardadas en {filepath}")
-    
-    def save_pod_metrics_json(self, metrics: List[Dict]):
-        if not metrics:
-            print("  No hay métricas de pods para guardar")
-            return
-            
-        filepath = f"{self.metrics_dir}/pod_metrics.json"
-        with open(filepath, "w", encoding="utf-8") as f:
-            json.dump(metrics, f, indent=2, ensure_ascii=False)
-        print(f" Métricas de pods JSON guardadas en {filepath}")
-    
-    def save_node_metrics_json(self, metrics: List[Dict]):
-        if not metrics:
-            print("  No hay métricas de nodos para guardar")
-            return
-            
-        filepath = f"{self.metrics_dir}/node_metrics.json"
-        with open(filepath, "w", encoding="utf-8") as f:
-            json.dump(metrics, f, indent=2, ensure_ascii=False)
-        print(f" Métricas de nodos JSON guardadas en {filepath}")
+# Comandos para obtener métricas de pods y nodes
+# 1.- kubectl top pods -n <namespace>
+# 2.- kubectl top pods
+# 3.- kubectl top nodes
 
-def main():
-    namespace = sys.argv[1] if len(sys.argv) > 1 else "default"
-    
-    print(" Iniciando recolección de métricas de Kubernetes")
-    print(f" Namespace: {namespace}")
-    print("-" * 50)
-    
-    collector = MetricCollector(namespace)
-    
-    # Recolectar métricas de pods
-    pod_metrics = collector.collect_pod_metrics()
-    if pod_metrics:
-        collector.save_pod_metrics_csv(pod_metrics)
-        collector.save_pod_metrics_json(pod_metrics)
-        print(f" Recolección de métricas de {len(pod_metrics)} pods")
-    
-    print("-" * 30)
-    
-    # Recolectar métricas de nodos
-    node_metrics = collector.collect_node_metrics()
-    if node_metrics:
-        collector.save_node_metrics_csv(node_metrics)
-        collector.save_node_metrics_json(node_metrics)
-        print(f" Recolección de métricas de {len(node_metrics)} nodo(s)")
-    
-    print("-" * 50)
-    print("Recolección de métricas completada")
+
+def find_root_dir(target_folder_name):
+    '''
+    Busca el directorio raíz del proyecto para el nombre de carpeta especificado.
+    '''
+    current = Path(__file__).resolve()
+    while current.name != target_folder_name:
+        if current.parent == current:
+            raise FileNotFoundError(f"No se encontró el directorio '{target_folder_name}' hacia arriba desde {__file__}")
+        current = current.parent
+    return current
+
+
+root_dir = find_root_dir("test-repo-pc4")
+
+metrics_dir = root_dir / "metrics"
+metrics_dir.mkdir(exist_ok=True)
+
+
+def get_namespaces():
+    namespaces = subprocess.run(["kubectl", "get", "namespaces", "-o", "name"], capture_output=True, text=True, check=True)
+    all_namespaces = [line.replace("namespace/", "") for line in namespaces.stdout.strip().splitlines()]
+    return all_namespaces
+
+
+def get_nodes():
+    nodes = subprocess.run(["kubectl", "get", "nodes", "-o", "name"], capture_output=True, text=True, check=True)
+    all_nodes = [line.replace("node/", "") for line in nodes.stdout.strip().splitlines()]
+    return all_nodes
+
+
+def collect_metrics__pods(namespaces):
+    pods_dir = metrics_dir / "pods"
+    pods_dir.mkdir(exist_ok=True)
+    print("Recolectando métricas de todos los pods...")
+    for names in namespaces:
+        with open(pods_dir / f"{names}_metrics.csv", "a", encoding="utf-8") as pod_metrics_file:
+            try:
+                metrics_result = subprocess.run(
+                    ["kubectl", "top", "pods", "-n", names],
+                    capture_output=True, text=True, check=True
+                )
+                pod_metrics_file.write(metrics_result.stdout)
+                lines = metrics_result.stdout.strip().split("\n")
+                if len(lines) > 1:
+                    headers = lines[0].split()
+                    metrics = []
+
+                    for line in lines[1:]:
+                        values = line.split()
+                        metrics.append(dict(zip(headers, values)))
+
+                    json_path = pods_dir / f"{names}_metrics.json"
+                    with open(json_path, "w", encoding="utf-8") as jf:
+                        json.dump(metrics, jf, indent=2)
+            except subprocess.CalledProcessError as e:
+                print(f"Error al obtener métricas de los pods en el namespace {names}: {e.stderr}")
+    path = metrics_dir / "pods"
+    archivos = os.listdir(path)
+    print(f"Recolección de métricas de pods completada y guardados en: {archivos}")
+    print("=========================================================")
+
+
+def collect_metrics__nodes(nodes):
+    nodes_dir = metrics_dir / "nodes"
+    nodes_dir.mkdir(exist_ok=True)
+    print("Recolectando métricas de todos los nodos...")
+    for node in nodes:
+        with open(nodes_dir / f"{node}_metrics.csv", "a", encoding="utf-8") as node_metrics_file:
+            try:
+                metrics_result = subprocess.run(
+                    ["kubectl", "top", "nodes"],
+                    capture_output=True, text=True, check=True
+                )
+                node_metrics_file.write(metrics_result.stdout)
+                lines = metrics_result.stdout.strip().split("\n")
+                if len(lines) > 1:
+                    headers = lines[0].split()
+                    metrics = []
+
+                    for line in lines[1:]:
+                        values = line.split()
+                        metrics.append(dict(zip(headers, values)))
+
+                    json_path = nodes_dir / f"{node}_metrics.json"
+                    with open(json_path, "w", encoding="utf-8") as jf:
+                        json.dump(metrics, jf, indent=2)
+            except subprocess.CalledProcessError as e:
+                print(f"Error al obtener métricas del nodo {node}: {e.stderr}")
+    path = metrics_dir / "nodes"
+    archivos = os.listdir(path)
+    print(f"Recolección de métricas de pods completada y guardados en: {archivos}")
+    print("=========================================================")
+
 
 if __name__ == "__main__":
-    main()
+    nodes = get_nodes()
+    if not nodes:
+        print("No se encontraron nodos.")
+    else:
+        print(f"Nodos encontrados: {', '.join(nodes)}")
+        print("=========================================================")
+        name = get_namespaces()
+        if not name:
+            print("No se encontraron namespaces.")
+        else:
+            print(f"Namespaces encontrados: {', '.join(name)}")
+            print("=========================================================")
+            collect_metrics__pods(name)
+            collect_metrics__nodes(nodes)
