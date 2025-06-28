@@ -72,3 +72,17 @@ if __name__ == "__main__":
 
     print("Recolección de logs y eventos completada.")
     print("Los logs se han guardado en el directorio 'logs'.")
+"""
+print("\n" + "=" * 50)
+print("Ejecutando recolección de métricas...")
+print("=" * 50)
+
+try:
+    # Llamar al script de métricas
+    subprocess.run([sys.executable, "scripts/metric_collector/metric_collector.py", namespace], check=True)
+    print("Métricas recolectadas exitosamente")
+except subprocess.CalledProcessError as e:
+    print(f"Error al recolectar métricas: {e}")
+except FileNotFoundError:
+    print("metric_collector.py no encontrado. Ejecutar manualmente.")
+ """
