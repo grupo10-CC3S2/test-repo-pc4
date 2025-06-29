@@ -21,5 +21,5 @@ def get_current_time():
 
 if __name__ == "__main__":
     start_background_logging()
-    logger.info("Flask server starting on 0.0.0.0:80")
+    logger.info("Flask server v2 on 0.0.0.0:80")
     app.run(host='0.0.0.0', port=80)
