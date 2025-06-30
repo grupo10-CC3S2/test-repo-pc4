@@ -9,10 +9,11 @@
 			"helm": "none",
 			"minikube": "none"
 		},
-		"ghcr.io/devcontainers/features/git:1": {}
+		"ghcr.io/devcontainers/features/git:1": {},
+		"ghcr.io/devcontainers/features/python:1": {}
 	},
 
-	"postCreateCommand": "curl -s https://fluxcd.io/install.sh | bash",
+	"postCreateCommand": "pip3 install -r requirements.txt",
 
 	"mounts": [
 		"source=/var/run/docker.sock,target=/var/run/docker.sock,type=bind",
